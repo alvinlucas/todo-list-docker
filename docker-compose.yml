@@ -1,0 +1,60 @@
+services:
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    volumes:
+      - shared-data:/shared
+    networks:
+      - front-network
+    develop:
+      watch:
+        - action: sync
+          path: ./frontend
+          target: /src
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: .
+
+  backend:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    environment:
+      - MONGO_URL=mongodb://db:27017/todos
+    depends_on:
+      - db
+    volumes:
+      - shared-data:/shared
+    networks:
+      - front-network
+      - back-network
+    develop:
+      watch:
+        - action: sync
+          path: ./backend
+          target: /src
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: .
+
+  db:
+    image: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - db-data:/data/db
+    networks:
+      - back-network
+
+volumes:
+  db-data:
+  shared-data:
+
+networks:
+  front-network:
+  back-network:
